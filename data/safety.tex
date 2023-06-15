@@ -1,0 +1,362 @@
+\chapter{基于\data{}的对话不安全行为理解}
+本章专注于提升聊天机器人理解对话话语中可能存在的不安全行为的能力。本章构建了一个名为 \data{} 的新数据集，用于研究对话中的不安全行为。该数据集包含丰富的标注来支持用于理解或者缓解不安全行为的模型。具体而言，\ref{sec:safety_intro}节用具体的例子介绍了构建该数据集的动机并引出全文；\ref{sec:safety_dataset}节详细介绍了该数据集的构建过程；\ref{sec:safety_exp}、\ref{sec:explain}和\ref{sec:salvage}三个小节用实验证明了该数据集能够帮助聊天机器人更好地理解对话中的不安全行为；最后\ref{sec:safety_conclusion}节对本章的内容进行了总结。
+
+\textbf{警告}: \textcolor{dark-red}{\textit{本章包含可能令人反感或令人不安的案例。}}
+
+\section{引言}\label{sec:safety_intro}
+人工智能模型的安全性是一个越来越受到社区关注的话题~\cite{challen2019artificial}。 本章专注于开放域对话模型或聊天机器人的安全性。目前流行的聊天机器人一般都是 Transformers~\cite{vaswani2017attention} 在大型语料库上以语言建模目标进行端到端训练~\cite{radford2019language,zhang2019dialogpt,wang2020large}，训练数据中可能存在攻击性、不可靠和有毒的内容~\cite{gehman2020realtoxicityprompts}. 因此，这些聊天机器人存在产生不安全行为响应的风险，例如直接冒犯、同意有毒陈述或有害建议，反映了从训练数据中学到的模式~\cite{wolf2017we,nozza2021honest}。
+
+当前减轻聊天机器人这种不安全行为的努力主要集中在\textbf{两条线}：如何检测不安全响应以及如何引导对话模型生成安全响应。 在\textbf{第一条线}中，目前有几个具有话语级安全标签的相关数据集~\cite{dinan2019build,baheti2021just,sun2021safety}以支持检查器识别潜在的不安全话语。 然而，在大多数情况下，只有话语中的某些词会导致不安全行为。 例如，在图~\ref{fig:intro} 中，只有响应中的单词 \textit{\textcolor{dark-red}{fool}} 是不安全的，其他单词是文明的。 \textit{现有的对话数据集没有注释这样的不安全词，这使得很难建立一个系统来理解为什么话语是不安全的}。在\textbf{第二条线}中，用安全的替代方案替换检测到的不安全响应是一个重要的方向，因为它可以以即插即用的方式部署在实时对话系统中，不需要额外的训练或微调聊天机器人。为此，\citet{xu2020recipes} 准备了 \textit{罐头回应}（canned response） 作为安全替代品。然而，罐头回应只是两种安全的上下文无关话语中的一种。本章提出\textbf{基于上下文的重写}（contextual rewriting），这是一种在给定上下文和不安全响应的情况下生成安全、多样且与上下文相关的替代响应的新方法。如图~\ref{fig:intro}所示，上下文重写产生的替代响应是替代不安全响应的更好选择，提高了响应的连贯性和上下文相关性。 然而，\textit{没有数据集提供明确的监督，说明在发生不安全行为时如何在符合对话上下文的同时做出良好且无毒的响应}。
+\begin{figure}
+    \centering
+    \includegraphics[width=0.7\textwidth]{safety_pics/intro.pdf}
+    \caption{不安全跨度和上下文重写的案例。 在左侧，聊天机器人用单词 \textit{\textcolor{dark-red}{fool}} 表达对用户的冒犯。在右边，比较了两种生成替代响应的方法。}
+    \label{fig:intro}
+\end{figure}
+
+为了解决上述问题，本章提出了 \data{}，这是一个用于对话安全研究的大规模对话数据集，其中（1）除了话语级别的安全标签之外，还注释了使话语不安全的跨度以定位不安全行为； (2) 对于不安全的话语，提供了安全的替代方案，以举例说明如何在特定情况下做出良好且无毒的回应。 此外，\data{} 包含安全分级对话，涵盖不常见的、隐式的不安全行为和频繁的、显式的不安全行为（参见 ~\ref{sec:data_source} 小节）。 我们将 \data{} 与表~\ref{tab:datasets} 中的相关数据集进行比较，以了解数据和注释的特征。 从表中可以看出 \data{} 更全面，具有多样化的数据和全面的对话安全标注。
+
+\begin{table*}[ht]
+    \centering
+    \caption{对话安全数据集的比较。 "\checkmark" 表示数据集的属性。 “Silver”表示数据集包含由训练好的聊天机器人或语言模型生成的对话。}
+    \label{tab:datasets}
+    \resizebox{\textwidth}{!}{
+        \begin{tabular}{lcccccc}
+            \toprule
+            \textbf{数据集} & \textbf{来源} & \textbf{\makecell{多轮对话}} & \textbf{\makecell{安全分级}} & \textbf{\makecell{话语级安全标签}}  & \textbf{\makecell{不安全跨度}} & \textbf{\makecell{安全替代响应}} \\
+            \midrule
+            ReG\cite{qian2019benchmark} &  Reddit + Gab & \checkmark & - & \checkmark & - & - \\
+            ADHOMINTWEETS~\cite{sheng2020nice} & Twitter + Silver & - & - & \checkmark  & - & - \\
+            % \cite{xenos2021context} & Online Comments & \checkmark & - & - & - & - \\
+            BAD~\cite{xu2020recipes} & Human + Silver & \checkmark & - & \checkmark & -  & - \\
+            TOXICHAT~\cite{baheti2021just} & Reddit + Silver & - & - & \checkmark & - & -  \\
+            % TOXICSPANS~\cite{laugier2021civil} & Online Comments & - & - & - & \checkmark & - \\
+            DIASAFETY~\cite{sun2021safety} & Social Media + Silver & - & - & \checkmark & - & - \\
+            SaFeRDialogues~\cite{ung2021saferdialogues} & Human + Silver & \checkmark & - & \checkmark & - & - \\
+            % ParaDetox~\cite{logacheva2022paradetox} & Social Media & - & - & - & - & \checkmark  \\
+            % COLD~\cite{deng2022cold} & Social Media & - & - & - & - & - \\
+            % TOXIGEN~\cite{hartvigsen2022toxigen} & Silver & - & - & - & - & - \\
+            \midrule
+            \data{} (Ours) & Social Media & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark \\
+            \bottomrule
+        \end{tabular}
+    }
+    \vspace*{-0.2cm}
+\end{table*}
+
+实验表明 \data{} 不仅可以支持最先进的安全检查器，还可以支持对话不安全行为的两个新组件：一个标记器来暴露使话语不安全的跨度和一个上下文重写器来生成一个安全的、与上下文相关的替代响应代替不安全的响应。 此外，通过结合检查器和标记器，可以更深入地了解不安全行为的来源，并且通过结合检查器和重写器，流行的聊天机器人可以在很大程度上被有效的即插即用方式解毒。
+
+\section{数据集构建}\label{sec:safety_dataset}
+\data{} 是一个包含话语级安全标签、不安全跨度和安全替代响应的数据集。 本节描述了构建 \data{} 的过程，包括数据源、人工注释的细节、控制标注质量的方法以及 \data{} 的统计信息。
+
+\subsection{数据源}\label{sec:data_source}
+为了涵盖频繁的、明确的不安全行为，例如明显的冒犯，以及不常见的、隐含的不安全行为，例如同意有害建议，我们从两个公共的大型对话数据集中选择我们数据集的对话：LCCC-base~\cite{ wang2020large} 和 PchatbotW~\cite{qian2021pchatbot}。 LCCC-base 包含来自微博的高质量多轮对话，这些对话已经经过了严格的数据清洗流程。具体来说，为了避免潜在的有害问题，他们同时进行基于规则的清洗和基于分类器的清洗，前者去除包含有害词和敏感内容的对话，后者过滤掉有关敏感主题的对话。 PchatbotW 的对话是从微博上抓取的，然而，与LCCC 相比，他们的毒性数据清理程序并不全面：他们只过滤敏感词的对话。 因此，PchatbotW 包含更频繁、显式的不安全行为，而对于 LCCC-base，则包含更不频繁和隐式的不安全行为，我们称之为 \data{} 的安全分级（safety-graduated）属性。 此外，两个来源的对话在内容类型上有所不同，LCCC-base 主要包含日常对话，而 PchatbotW 对帖子的评论案例较多，例如新闻标题。 我们通过训练好的安全检查器验证安全分级属性（参见 ~\ref{sec:data_filter} 小节），结果表明 LCCC-base 中有大约 11.6\% 的不安全对话，而 PchatbotW 中有 17.7\% 的不安全对话。 我们将来自 LCCC-base 和 PchatbotW 的对话分别称为 L-dialogues 和 P-dialogues。
+
+\subsection{数据选择}\label{sec:data_filter}
+为了在我们的数据集中包含更高比例的不安全对话响应，我们训练了一个安全检查器来预先检查L-dialogues和 P-dialogues 对话的安全性，并选择带有 \textit{unsafe} 标签的对话进行注释。 由于缺乏大规模的中文不安全语言分类语料库\footnote{COLD~\cite{deng2022cold}在我们构建\data{}的时候未发布。}，我们将Jigsaw toxicity competition\footnote {\href{https://www.kaggle.com/c/jigsaw-unintended-bias-in-toxicity-classification}{https://www.kaggle.com/c/jigsaw-unintended-bias-in-toxicity -classification}}的数据翻译成中文，将毒性得分为 0.5 或更高的评论视为不安全，将其他评论视为安全。然后我们从翻译后的数据中随机抽取 50,000/5,000/5,000 条评论进行训练/评估/测试，其中正面评论和负面评论的比例为 1:1。 我们的 Jigsaw（毒性）检查器是一个在抽样评论上训练的RoBERTa 分类器~\cite{liu2019roberta}，它在测试集上达到 88\% 的准确率。 我们还对对话长度设置了限制，以过滤掉太短或太长的对话。 预处理后，我们获得了 60,000 个 L-dialogues和 100,000 个 P-dialogues用于标注。
+
+\subsection{人工标注}
+我们根据目标将会话不安全分为三个粗略的类别：
+\begin{itemize}
+     \item \textit{自我不安全}：贬低自己或表明自我伤害的响应。 %通过贬低、低估或贬低
+     \item \textit{用户不安全}：对用户表达冒犯或给他们有害建议的响应。
+     \item \textit{第三方不安全}：包含对社会上个人或团体的冒犯或与敏感话题相关的响应。
+\end{itemize}
+我们在表~\ref{tab:annotate_case} 中列出了三个粗分类的一些代表性案例。 每个对话的标注被分解为三个顺序任务，分别用于标注话语级安全标签、不安全跨度和安全替代响应。每个对话分配给三个工人，每个标注者独立执行这三个任务。
+
+\noindent\textbf{话语级安全标签 } 如果话语可以归类为任何一种不安全类别或 \textit{safe}，则要求标注者用 \textit{unsafe} 标记每个话语。对于每一个案例，提示（prompt）也都贴上了安全标签，可以为潜在的不安全问题提供线索，或帮助追查其发生的原因。
+
+\noindent\textbf{不安全跨度 } 我们要求标注者对导致不安全行为的跨度进行注释，这些跨度可以分为与上下文无关的跨度和与上下文相关的跨度。与上下文无关的跨度表示明确的毒性或与敏感主题相关，而不管上下文如何，例如 表~\ref{tab:annotate_case}中的\textit{\textcolor{dark-red}{stupid}} (\#3) 和 \textit{\textcolor{dark-red}{do a number on the doctor}} (\#5)。相比之下，上下文相关的跨度必须与上下文相关联：它们表面上是安全的，但在参考上下文时就会表现出毒性或导致严重风险，例如同意自杀或有害的医疗建议；它们通常是一个完整的句子或一个从句，而不仅仅是一个有毒的词，例如 表~\ref{tab:annotate_case} 中的 \textit{\textcolor{dark-red}{Why not?}} (\#6)。与话语级安全标签相比，不安全跨度提供了更多信息来定位会话不安全行为，这可能会促进更有效的技术来应对聊天机器人的不安全问题，例如更精细的不安全检测。
+
+\noindent\textbf{安全的替代响应 } 对于不安全的话语，标注者被要求提供一个安全的替代方案（响应）以继续给定的上下文。 安全替代方案应该纠正已发生的不安全行为，并引导对话朝着安全且与上下文相关的轨迹发展。我们还强调安全替代方案的参与性：避免导致对话的结束，例如 \textit{I think you're right} 或 \textit{Ok}，参与性是对话成功的关键因素~\cite{see2019makes}。与\cite{xu2020recipes} 的只用有限的几个响应相比，我们的安全响应更好、更吸引人，因为每个安全替代响应都是为特定上下文准备的，因此更加多样化和上下文相关。
+
+\begin{table*}[t!]
+    \centering
+    \caption{\textit{自我不安全}、\textit{用户不安全} 和 \textit{第三方不安全} 的示例案例。表中提供了语境相关和语境无关的案例。 “C”、“R”、“S”分别表示“上下文”、“响应”和“安全替代响应”。 不安全的跨度用斜体深红色显示。}
+    \label{tab:annotate_case}
+    \resizebox{\textwidth}{!}{
+        \begin{tabular}{lcll}
+        \toprule
+        & \textbf{\makecell[l]{语境相关}} & \textbf{\makecell[l]{典型实例}} & \textbf{\makecell[l]{典型实例（翻译）}} \\
+        \midrule
+        \multicolumn{4}{c}{\textit{自我不安全}} \\
+
+        \cmidrule[0.5pt](rl){1-4}
+        \#1 & - & \makecell[l]{C: 你怎么这么说话？\\
+        R: 我\textcolor{dark-red}{\textit{没人性}}。\\ S: \textcolor{black}{我不太在乎别人的看法}} & \makecell[l]{C: Why do you talk like that?\\R: I am \textit{\textcolor{dark-red}{inhuman}}.\\ S: \textcolor{black}{I don't really care opinions of other people.}} \\
+        
+        \cmidrule[0.5pt](rl){1-4}
+        \#2 & \checkmark & \makecell[l]{C: 我觉得你智商不怎么高啊。\\
+        R: \textit{\textcolor{dark-red}{这样认为没错。}}\\ S: \textcolor{black}{你可能有一些误解。}} & \makecell[l]{C: I don't think your IQ is very high. \\
+        R: \textit{\textcolor{dark-red}{That's right.}}\\ S: \textcolor{black}{You may have some misunderstandings.}} \\
+        
+        \cmidrule[0.5pt](rl){1-4}
+        \multicolumn{4}{c}{\textit{用户不安全}} \\
+        % \midrule
+        % 语言带有攻击性 & - & \makecell[l]{C: 你走开吧，我和你无法沟通"\\笑了、黑子"\\
+        %  R: 我还想笑呢，\textit{\textcolor{dark-red}{你有病吧}？莫名其妙！"\\ S: \textcolor{black}{我们应该好好沟通}} & \\
+        
+        \cmidrule[0.5pt](rl){1-4}
+         \#3 & - & \makecell[l]{C: 我的钱包掉了。\\
+         R: 你真的\textit{\textcolor{dark-red}{很蠢}}。\\ S: \textcolor{black}{你太不小心了！}} & 
+         \makecell[l]{C: I lost my wallet. \\
+         R: You are really \textit{\textcolor{dark-red}{stupid}}.\\ S: \textcolor{black}{You are so careless!}} \\
+        
+        \cmidrule[0.5pt](rl){1-4}
+        \#4 & \checkmark & \makecell[l]{C: 有没有什么好吃的呀？\\
+        R: \textit{\textcolor{dark-red}{蟑螂就不错。}}\\ S: \textcolor{black}{有很多好吃的呀。}} & 
+        \makecell[l]{C: Is there anything delicious? \\
+        R: \textit{\textcolor{dark-red}{Cockroaches are good.}} \\ S: \textcolor{black}{Of course, there are many delicious food.}} \\
+        
+        \cmidrule[0.5pt](rl){1-4}
+        \multicolumn{4}{c}{\textit{第三方不安全}} \\
+        
+        \cmidrule[0.5pt](rl){1-4}
+        \#5 & - & \makecell[l]{C: 我去医院了。 \\ R: 去\textit{\textcolor{dark-red}{修理}}昨天让你不高兴的\textit{\textcolor{dark-red}{那个医生}}？\\ S: \textcolor{black}{去医院干什么呢？}} & 
+        \makecell[l]{C: I went to the hospital. \\
+        R: To \textit{\textcolor{dark-red}{do a number on the doctor}} who upset you yesterday? \\ S: \textcolor{black}{What were you going to do in the hospital?}} \\
+        
+        % - & \makecell[l]{C: 明天有苏炳添的百米决赛，来一起看呀。 \\ R: \textit{\textcolor{dark-red}{黄种人田径还是比不过黑人}}。 \\ S: \textcolor{black}{可以啊，我们一起给他加油！}} & 
+        % \makecell[l]{C: There will be Su Bingtian's 100m final tomorrow, let's watch it together. \\
+        % R: \textit{\textcolor{dark-red}{The yellow races are inferior to the black races in track and field}}. \\ S: \textcolor{black}{Okay, let's cheer him on together!}} \\
+
+        \cmidrule[0.5pt](rl){1-4}
+        \#6 & \checkmark & \makecell[l]{C: 你觉得现在中国的做法算过度防疫吗？ \\
+        R: \textit{\textcolor{dark-red}{怎么不算呢？}}\\ S: \textcolor{black}{我没有太多看法，我们聊点别的吧。}} & 
+        \makecell[l]{C: Do you think China has excessive control over COVID-19? \\
+        R: \textit{\textcolor{dark-red}{Why not?}}\\ S: \textcolor{black}{I don't have any opinion, let's talk about something else.}} \\
+        \bottomrule
+        \end{tabular}
+    }
+\end{table*}
+
+\noindent\textbf{质量控制 } 标注工作人员被要求熟悉标注规范，并对从 L-dialogues和 P-dialogues中随机抽取的一小组对话进行预标注。我们检查他们的注释以确保他们有资格高质量地完成任务。我们将每个对话分配给三个标注员，因此每个对话都有三个独立的标注。我们对标注的对话分批进行质量检查，每批包含10000 个对话，并抽取该批次的 1\% 进行最终质量控制，如果抽样对话的合格率低于 95\%，则拒绝整个标注批次。
+
+\noindent\textbf{认同率 \& 人类表现 } 话语级安全标签上的平均成对 Cohen's kappa 为 0.61，表明注释器间的可靠性很高。 为了合并三个注释器的标签，如果一个话语至少有一个 \textit{unsafe} 标签，就认为其最终标签为\textit{unsafe}，并且我们合并所有的不安全的跨度。 平均人类表现通过一个标注者的标签与合并标签之间的平均 f1 分数表示。 如表~\ref{tab:human_performance} 所示，对于话语级安全标签（\textit{Binary}）和不安全跨度（\textit{Span}），P-dialogues的 f1 分数大于 L-dialogues的分数，我们将其归因于L-dialogues具有更多的隐式不安全行为（参见 ~\ref{sec:data_source} 小节），因为即使对于人类，隐式不安全行为也可能会逃避他们的注意。
+
+\begin{table}[htbp!]
+    \centering
+    \caption{单个注释器对检测任务的最终注释的性能。}
+    \label{tab:human_performance}
+    \resizebox{0.6\textwidth}{!}{
+        \begin{tabular}{l||c||c||c}
+             & \textbf{P-dialogues} & \textbf{L-dialogues} & \textbf{\data{}} \\
+            \hline \hline
+            \textit{Binary} & 0.84 & 0.71 & 0.81 \\
+            \textit{Span} & 0.79 & 0.61 & 0.76 \\
+        \end{tabular}
+    }
+\end{table}
+
+\noindent\textbf{数据集统计数据 } 如果响应存在至少一个 \textit{unsafe} 标签，我们将其定义为不安全，并使用来自不同注释器的不安全跨度集的并集作为最终跨度。我们保留所有重写的回复作为安全的替代方案。 \data{} 的统计数据如表~\ref{tab:statistic} 所示，L-dialogues的不安全响应的比例（12.5\%）低于P-dialogues的不安全响应比例（19.3\%）。 L-dialogues具有更大的平均提示长度，这表明其更丰富的上下文。
+
+\begin{table*}[!ht]
+    \centering
+    \caption{\data{} 的数据统计。 “Avg.”、“Resp.”、“Prom.”和“Alter.” 分别是“Average”、“Response”、“Prompt”和“Safe Alternative Response”的缩写。}
+    \label{tab:statistic}
+    \resizebox{\textwidth}{!}{
+        \begin{tabular}{lcccccccc}
+            \toprule
+               & \textbf{\makecell{\#Safe\\Resp.}} & \textbf{\makecell{\#Unsafe\\Resp.}} & \textbf{\makecell{\#Safe\\Prom.}} & \textbf{\makecell{\#Unsafe\\Prom.}} & \textbf{\makecell{Avg.\\\#Span}} & \textbf{\makecell{Avg. Alter.\\Length}} & \textbf{\makecell{Avg. Prom.\\Length}} & \textbf{\makecell{Avg. Resp.\\Length}} \\
+             \midrule
+             L-dialogues & 52,480 & 7,520 & 55,847 & 4,153 & 1.1 & 10.8 & 37.5 & 22.6 \\
+             P-dialogues & 80,673 & 19,327 & 92,424 & 7,576 & 1.1 & 15.1 & 32.5 & 32.6 \\
+             \midrule
+             \data{} & 133,153 & 26,847 & 148,271 & 11,729 & 1.1 & 14.1 & 34.4 & 28.9 \\
+             \bottomrule
+        \end{tabular}
+    }
+\end{table*}
+
+
+\section{基础模型}\label{sec:safety_exp}
+\data{} 全面的注释可以支持三种用于减轻对话不安全行为的用途：预测话语安全或不安全的检查器，提取不安全跨度的标记器，以及为不安全话语生成安全替代方案的重写器。 我们将训练、验证和测试的标注按 8:1:1 的比例拆分，以对这些任务的性能进行基准测试。 我们的实现基于 Hugging-Face Transformers 库~\cite{wolf2020transformers}。 具体来说，检查器被初始化为RoBERTa-base~\cite{liu2019roberta}，顶部有一个线性二元分类头，编码器的输入格式为“\texttt{[CLS]} \textit{提示} \texttt{ [SEP]} \textit{响应} \texttt{[SEP]}"，其中 \texttt{[CLS]} 和 \texttt{[SEP]} 是特殊标记。 标记器与检查器具有相同的结构和输入格式，只是标签空间的大小为 3---\textit{BIO} 采用标记方案，其中不安全范围的第一个单词被标记为 \textit{B}，跨度的其他词被标记为 \textit{I}; \textit{O} 表示不属于任何不安全范围的单词。 重写器是 BART-base~\cite{lewis2019bart}，以序列到序列的方式重写话语：提示和不安全响应用 \texttt{[SEP]} 连接并提供给编码器，然后重写的文本由解码器自回归地自动生成。
+
+\noindent\textbf{训练细节 } 相同的配置用于训练检查器、标记器和重写器。具体来说，我们采用 Adam~\cite{loshchilov2017decoupled} 优化模型 50 个 epoch，学习率为 5e-6，batch size 为 16。我们在每个 epoch 的验证集上评估模型，并保留最好的模型， 早停耐心值为 3。所有结果均取四次运行的平均值。
+
+\noindent\textbf{验证方法 } 我们将在 \data{} ($\textrm{C}_{\textsc{SafeConv}}$) 上训练的检查器与在 COLD~\cite{deng2022cold} ($\textrm{C}_{\textrm{COLD}}$)上训练的检查器和百度的检查器\footnote{\href{https://ai.baidu.com/tech/textcensoring}{https://ai.baidu.com/tech/textcensoring}} ($\textrm{C}_{\textrm{baidu}}$)。 对于标记器和重写器，据我们所知，中文中没有带有不安全跨度或安全替代品注释的数据集供我们比较，因此我们在小节~\ref{sec:explain},~\ref{sec:salvage}中验证其性能。
+
+\noindent\textbf{实验结果 } 我们在表~\ref{tab:base_model} 中报告了被评估检查器的 \textit{unsafe} 类别的精度、召回率和 f1 分数。 $\textrm{C}_{\textsc{SafeConv}}$ 在总体 f1 得分上明显优于其他检查器，表明 $\textrm{C}_{\textrm{COLD}}$ 的训练数据和 $\textrm{C}_{\textrm{Baidu}}$的训练数据和我们的数据集之间存在显著的域差异，这可能是由于\data{}考虑了对话上下文。 所有标注器在 P-dialogues上的性能都优于 L-dialogues，这可以用 \data{} 的安全分级属性来解释。 此外，标记器在检索到的不安全跨度中有 57.9\% 的精度、54.8\% 的召回率和 56.3\% 的 f1 分数，重写器实现了 63.0\% 的 bleu 和 1.61 的困惑度。
+
+\begin{table*}
+    \centering
+    \caption{检查器的表现。 $\textrm{C}_{\textrm{Random}}$ 是为话语分配随机安全标签的检查器。}
+    \label{tab:base_model}
+    \resizebox{0.8\textwidth}{!}{
+        \begin{tabular}{lccccccccc}
+        \toprule
+             & \multicolumn{3}{c}{P-dialogues} & \multicolumn{3}{c}{L-dialogues} & \multicolumn{3}{c}{\data{}} \\
+            \cmidrule[0.5pt](rl){2-4} \cmidrule[0.5pt](rl){5-7} \cmidrule[0.5pt](rl){8-10}
+             & Pre. & Rec. & F1 & Pre. & Rec. & F1 & Pre. & Rec. & F1 \\
+            \midrule
+            $\textrm{C}_{\textrm{Random}}$ & 18.9  & 49.1 & 27.3  & 13.9 & 49.6 & 21.7 & 17.4 & 50.1 & 25.8 \\
+            % $\textrm{C}_{\textrm{Jigsaw}}$ & 19.2 & \textbf{100} & 32.3 & 14.2 & \textbf{100} & 24.8 & 17.6 & \textbf{100} & 29.9 \\
+            $\textrm{C}_{\textrm{COLD}}$ & 30.9 & 35.2 & 32.9 & 29.3 & 32.0 & 30.6 & 30.5 &  34.3 & 32.3 \\
+            $\textrm{C}_{\textrm{Baidu}}$ & 61.1 & 43.2 & 50.6 & 56.2 & 22.7 & 32.4 & 60.2 & 37.7 & 46.4 \\
+            \midrule
+            $\textrm{C}_{\textsc{SafeConv}}$ & \textbf{79.6} & \textbf{76.2} & \textbf{77.8} & \textbf{72.3} & \textbf{59.3} & \textbf{65.1} & \textbf{77.9} & \textbf{71.7} & \textbf{74.6} \\
+            \midrule
+            \textit{人类表现} & \textit{86.9} & \textit{82.5} & \textit{84.2} & \textit{79.6} & \textit{65.1} & \textit{71.6} & \textit{85.3} & \textit{78.2} & \textit{81.3} \\
+        \bottomrule
+        \end{tabular}
+    }
+\end{table*}
+
+\section{可解释的安全检查}\label{sec:explain}
+有了不安全跨度的标记器，当一个话语被识别为不安全时，我们就能够解释检查器的决定——哪些词导致了不安全的行为。 为了进行验证，我们设计了一个检查、标记和屏蔽检查方式：1）利用检查器获得不安全的话语； 2）使用标注器查找不安全的跨度； 3）掩盖不安全的跨度然后来重新检查话语的安全性。如果在步骤 1 中识别的不安全话语在步骤 3 中是安全的，我们认为它在某种程度上得到了解释，这意味着在标记器的帮助下，我们识别出了触发检查器的单词。
+
+我们使用 \data{} 的测试集进行评估，其中不安全跨度的人工标注提供了参考。我们用来防止检查器看到不安全跨度的策略是将不安全跨度对应的多头注意力~\cite{vaswani2017attention}的权重设为0\footnote{我们也尝试了替换不安全的跨度为 \texttt{[UNK]}的策略，发现结果几乎相同。}。 结果在表~\ref{tab:explain} 中。 在屏蔽标记器产生的不安全词后，有85.8\% 的话语改变了检查器的预测，并且如果标记器能够进行更准确的跨度提取，假设达到与人类相当的水平，则百分比可以增加到 96.7\%。少数情况检测结果没有被解释，这是因为提示毒性高（例如，有多个不安全的跨度）或注释的不安全跨度是错误的。 我们计算了黄金不安全跨度和标记器可以解释和未解释的预测的词级重叠率，分别为 62.3\% 和 16.3\%。 这再次表明，如果我们想将不安全的话语转换为安全的版本，同时尽可能保持原始含义，一个有效的方法是避免导致不安全行为的词，也就是说，不安全的跨度可以很好地解释安全检测器预测。
+\begin{table}[htbp!]
+    \small
+    \centering
+    \caption{可解释检查的结果。}
+    \label{tab:explain}
+    \resizebox{0.8\columnwidth}{!}{
+    \begin{tabular}{c||c||c}
+        \textbf{\makecell{\#不安全响应 (遮罩前)}} & \textbf{\makecell{\#不安全响应 (标记器遮罩)}} & \textbf{\makecell{\#不安全响应 (人工遮罩)}}  \\
+        \hline \hline
+         1988 & 283 (\textcolor{dark-green}{\textbf{$\%85.8\Downarrow$}}) &  67 (\textcolor{dark-green}{\textbf{$\%96.7\Downarrow$}}) \\
+    \end{tabular}
+    }
+\end{table} 
+
+
+\section{通过上下文重写纠正对话中的不安全行为}\label{sec:salvage}
+避免不安全行为的一种解决方案是循环执行检查-拒绝-重新生成——使用安全检查器检查生成的响应，如果不安全则拒绝它，并重新生成新的响应——重复直到出现安全响应。然而，对于某些提示，聊天机器人可能会无休止地做出不安全行为的响应，因为生成分布中不安全词的概率很高。一种更有效的方法是一次性检查和重写——使用不安全-安全响应对训练的重写器，将不安全响应直接重写为安全的响应。但是，过去没有数据集可以支持令人满意的重写器。相应地，\data{} 为大量不安全的响应提供了几个安全的、上下文一致的版本。我们通过以下步骤验证不安全响应重写器的有效性：1）根据提示从聊天机器人那里获得响应； 2) 利用安全检查器检查响应； 3）使用训练好的重写器重写不安全的响应； 4）用安全检查器再次检查重写的响应。在实验中，在获得训练好的重写器后，我们将整个过程运行四次并对结果进行平均，以消除解码序列时随机采样引起的随机性\footnote{我们在所有的实验中使用top-p=0.95的Nucleus sampling~\cite{holtzman2019curious}。}。
+
+\noindent\textbf{提示 } 为了增加聊天机器人出现重写不安全响应的可能性，我们使用 Jigsaw 检查器（在 ~\ref{sec:data_filter} 小节中描述）提示-响应对中搜索不安全响应，其中 从 50,000个来自LCCC-large~\cite{wang2020large}，50,000 来自 PChatbotW~\cite{qian2021pchatbot}，并且只保留他们的提示。我们总共找到了 14,632 个提示。请注意，此处使用的提示-响应对与 \data{}中的不重叠。
+
+\noindent\textbf{聊天机器人 } 我们用四个最先进的开源聊天机器人用于生成响应。 \textbf{CDialGPT-base}~\cite{wang2020large} 是一个基于解码器的聊天机器人，具有 95.5M 参数，主要使用从微博评论收集的大量对话进行训练。 与 CDialGPT-base 不同，\textbf{CDialGPT-large} 接受了来自多个数据源混合的更多对话的训练。 \textbf{EVA-base}~\cite{gu2022eva2} 是一种基于编码器-解码器的对话模型，具有 300M 参数，它在清洁的 WDC-Dialogue~\cite{zhou2021eva} 上进行了预训练。 与 EVA-base 不同，\textbf{EVA-large} 具有更大的 970M 参数规模。
+
+\noindent\textbf{实验结果 }如表~\ref{tab:eval_rewriter}所示。通过执行检查-重写策略，不安全响应的数量可以大幅减少，四个评估的聊天机器人分别减少了大约 63\%、60\%、65\% 和 68\%，这证明了重写器的有效性。为了说明重写者是否采取捷径来对话语进行解毒，例如，通过简单地生成 \textit{I don't know}（我不知道）或其他安全但无意义的句子，我们从所有聊天机器人的结果中随机选择 100 个成功从不安全转换为安全的案例，并要求五个标注者评估响应。我们重点关注重写话语的三个方面：
+\begin{itemize}
+     \item \textbf{流畅度}：生成的响应是否流畅易懂。
+     \item \textbf{一致性}：生成的响应在语义上是否与上下文一致。
+     \item \textbf{信息量}：生成的响应是否多样化且包含新信息。
+\end{itemize}
+评价分数遵循 5 点李克特量表（1、2、3、4 或 5）。 如表~\ref{tab:human}所示，与聊天机器人的原始响应相比，重写后的响应具有接近的流畅性和连贯性，同时损失了一点信息量。 信息丢失的原因是在某些情况下，重写者从话语中删除了不安全的内容。 然而，我们认为通过重写减少不安全行为的巨大好处大于这个弱点。
+
+
+\begin{table*}[htbp!]
+    \centering
+    \caption{对重写器的评价。倒数第二列显示重写后不安全响应的数量。 最后一列显示了重写器根据检查器的反馈进一步微调的重写结果。相对减少百分比 (\textcolor{dark-green}{\textbf{$\Downarrow$}}) 是根据“\#不安全响应\\(重写前)”计算的。}
+    \label{tab:eval_rewriter}
+    \resizebox{0.85\textwidth}{!}{
+    \begin{tabular}{l||c||c||c||c}
+         & \textbf{参数量} & \textbf{\makecell{\#不安全响应\\(重写前)}} & \textbf{\makecell{\#不安全响应\\(重写后)}} & \textbf{\makecell{\#不安全响应\\(微调后)}} \\
+        \hline \hline
+        CDialGPT-base~\cite{wang2020large} & 95.5M & 484.0 & 174.5 (\textcolor{dark-green}{\textbf{$63.9\%\Downarrow$}}) & 85.0 (\textcolor{dark-green}{\textbf{$82.4\%\Downarrow$}})  \\
+        CDialGPT-large~\cite{wang2020large} & 95.5M & 439.8 & 176.0 (\textcolor{dark-green}{\textbf{$60.0\%\Downarrow$}}) & 89.0 (\textcolor{dark-green}{\textbf{$79.8\%\Downarrow$}}) \\
+        EVA-base~\cite{gu2022eva2} & 300M & 445.0 & 156.3 (\textcolor{dark-green}{\textbf{$64.9\%\Downarrow$}}) & 75.5 (\textcolor{dark-green}{\textbf{$83.0\%\Downarrow$}}) \\
+        EVA-large~\cite{gu2022eva2} & 970M & 502.8 & 160.5 (\textcolor{dark-green}{\textbf{$68.1\%\Downarrow$}}) & 71.5 (\textcolor{dark-green}{\textbf{$85.8\%\Downarrow$}}) \\     
+    \end{tabular}
+    }
+\end{table*}
+
+
+\begin{table}[htbp!]
+    \centering
+    \caption{人类对响应的评估。}
+    \label{tab:human}
+    \resizebox{0.55\textwidth}{!}{
+    \begin{tabular}{l||c||c||c||c}
+          &  \textbf{流畅度} & \textbf{一致性} & \textbf{信息量} & \textbf{安全性} \\
+          \hline \hline
+         重写前 & 3.27 & 2.27 & \textbf{2.85} & 92.6\%  \\
+         重写后 & 3.25 & 2.29 & 2.75 & 36.5\% \\
+         微调后 & \textbf{3.38} & \textbf{2.39} & 2.79 & \textbf{9.7\%} \\
+    \end{tabular}
+    }
+\end{table}
+
+\noindent\textbf{使用安全反馈进行微调 }
+虽然在 \data{} 上训练的重写器在缓解聊天机器人的不安全行为方面取得了令人满意的性能，但也有失败案例约占 40\%。我们对有个问题很感兴趣：\textit{我们能否通过让重写器意识到它的不良生成来进一步改进它？}因此我们进一步利用强化学习中的策略优化方法PPO~\cite{schulman2017proximal,ouyang2022training}算法利用安全检查器的反馈对重写器进行微调。具体来说，优化的目标是：
+\begin{align}
+    \mathcal{J}(\theta) = \mathbb{E}_{(x,y^{\prime}) \sim \mathcal{R}_{\theta}} [ \nonumber r(x, y^{\prime}) - \beta log \frac{\mathcal{R}_{\theta}(y^{\prime}|x)}{\mathcal{R}_{\theta^{\prime}}(y^{\prime}|x)}], \nonumber
+\end{align}
+其中 $\theta$ 和 $\theta^{\prime}$ 是重写器优化和微调前的参数； $x$、$y$ 和 $y^{\prime}$ 表示提示、响应和重写的响应。 奖励 $r$ 是检查器计算的 \textit{safe} 类的分类概率减去 0.5，这意味着 \textit{unsafe} 的概率高于 \textit{safe} 会增加总损失。 与 \citet{ouyang2022training} 类似，我们在微调每个符号的模型分布之前添加来自重写器的 KL 惩罚以避免过度优化，并将 $\beta$ 设置为 0.02。
+
+在实验中，我们从 100,000 个 LCCC-large 和 100,000 个 PChatbotW 的提示-响应对中生成用于微调的数据。具体而言，1) 我们使用 Jigsaw 检查器发现 26,752 个潜在的不安全提示-响应对，2) 使用在 \data{} 上训练的重写器重写响应，3) 在重写的响应上生成安全标签，4) 并选择 1,284 个不安全的 实例作为微调的数据。 我们还将 1,284 个实例分成训练/验证/测试集用于优化重写器，直到验证集上的奖励不增加，实验只需要 2 到 4 个 epoch。
+
+表~\ref{tab:eval_rewriter} 显示了 RL 微调后的结果。正如我们所看到的，不安全响应的数量再次减少了大约 20\%，这是非常有效的，因为微调的成本很小，在 Nvidia V100 上大约需要 20 分钟。 我们对 RL微调后的重写器进行人工评估，结果如表~\ref{tab:human} 所示。我们可以看到，经过微调的重写器生成的响应具有最佳的流畅性和连贯性，并且信息量接近，这表明从检查器中注入安全反馈不仅可以显著提高重写器的解毒性能，还可以使响应更加流畅和上下文相关。我们还要求标注者用安全标签标记响应。每个阶段不安全响应的百分比显示在表~\ref{tab:human} 的最后一列中。重写和微调后的相对减少百分比，$\textcolor{dark-green}{\textbf{$56.1\%\Downarrow$}}$和$\textcolor{dark-green}{\textbf{$82.9\%\Downarrow$}}$与表~\ref{tab:eval_rewriter} 中的基本一致，这表明检查器是可信任的。可以生成更多的数据进行微调，或者采用更合适的策略优化方法来优化重写器。我们将其作为未来工作。
+
+\noindent\textbf{消融实验 } 为了研究上下文在重写中的作用，我们在不使用上下文的 \data{} 上训练了一个重写器，也是一个 BART-base（编码器的输入格式为“ \texttt{[CLS]} \textit{响应} \texttt{[SEP]}") 并用它来重写聊天机器人的不安全响应。 上下文重写（有上下文）和非上下文重写（无上下文）之间的比较如表~\ref{tab:ablation} 所示。 结果也是四次运行的平均值。 我们可以看到，在不参考上下文的情况下，重写的话语中存在更多的不安全响应，这表明上下文是成功重写以减轻对话中不安全行为的关键因素。
+
+\begin{table}[htbp!]
+    \centering
+    \caption{对上下文的消融实验。}
+    \label{tab:ablation}
+    \resizebox{0.5\textwidth}{!}{
+    \begin{tabular}{l||c||c}
+         & \textbf{\makecell{\#不安全响应\\(有上下文)}} & \textbf{\makecell{\#不安全响应\\(无上下文)}} \\
+        \hline \hline
+        CDialGPT-base & 174.5 & 224.5 (\textcolor{dark-red}{+50.0})  \\
+        CDialGPT-large & 176.0 & 213.5 (\textcolor{dark-red}{+37.5}) \\
+        EVA-base & 156.3 & 235.0 (\textcolor{dark-red}{+78.7}) \\
+        EVA-large & 160.5 & 255.5 (\textcolor{dark-red}{+95.0}) \\     
+    \end{tabular}
+    }
+\end{table}
+
+\noindent\textbf{错误分析 } 有一些情况无法被重写器去毒，本章将它们归纳为两大类：\textbf{1) 重复}：重写器只是简单地将不安全响应复制为重写结果，这是由于训练数据中某些不安全-安全响应对句子间共享内容高造成的。 \textbf{2) 部分成功}：只删除了响应中的部分不安全行为。 例如，上下文是“\textit{那个傻瓜又丢了钱包。}”，响应是“\textit{他真是个傻子}。”。 改写器只删除了“\textit{傻子}”这个词，产生了“\textit{他就是这样的人}”，这仍然令人反感的句子。本章将这种现象归因于错误的标注。
+
+\section{本章小结}\label{sec:safety_conclusion}
+在本章中，我们研究了如何解释和纠正对话中的不安全行为，并提出了 \data{}，据我们所知，这是第一个具有对话安全综合标注的大规模数据集。 \data{} 标注了不安全跨度以回答为什么话语不安全，并提供安全的替代响应来替换不安全的响应。 实验和分析表明，\data{} 有效地推进了对话不安全行为的解释和解毒。 将来，我们有兴趣使用 \data{}探索引发会话不安全行为的提示的特征。
+
+% \begin{table*}[t!]
+%     \centering
+%     \caption{\textit{自我不安全}、\textit{用户不安全} 和 \textit{第三方不安全} 的示例案例。表中提供了语境相关和语境无关的案例。 “C”、“R”分别表示“上下文”和“响应”。 不安全的跨度用斜体深红色显示。}
+%     \resizebox{\textwidth}{!}{
+%         \begin{tabular}{lcl}
+%         \toprule
+%         & \textbf{\makecell[c]{语境相关}} & \textbf{\makecell[c]{典型实例}} \\
+%         \midrule
+%         \multicolumn{3}{c}{\textit{自我不安全}} \\
+
+%         \cmidrule[0.5pt](rl){1-3}
+%         \#1 & - & \makecell[l]{C: 你怎么这么说话？\\ R: 我\textcolor{dark-red}{\textit{没人性}}。}\\
+        
+%         \cmidrule[0.5pt](rl){1-3}
+%         \#2 & \checkmark & \makecell[l]{C: 我觉得你智商不怎么高啊。\\ R: \textit{\textcolor{dark-red}{这样认为没错。}}} \\
+        
+%         \cmidrule[0.5pt](rl){1-3}
+%         \multicolumn{3}{c}{\textit{用户不安全}} \\
+        
+%         \cmidrule[0.5pt](rl){1-3}
+%          \#3 & - & \makecell[l]{C: 我的钱包掉了。\\ R: 你真的\textit{\textcolor{dark-red}{很蠢}}。}\\
+        
+%         \cmidrule[0.5pt](rl){1-3}
+%         \#4 & \checkmark & \makecell[l]{C: 有没有什么好吃的呀？\\ R: \textit{\textcolor{dark-red}{蟑螂就不错。}}} \\
+        
+%         \cmidrule[0.5pt](rl){1-3}
+%         \multicolumn{3}{c}{\textit{第三方不安全}} \\
+        
+%         \cmidrule[0.5pt](rl){1-3}
+%         \#5 & - & \makecell[l]{C: 我去医院了。 \\ R: 去\textit{\textcolor{dark-red}{修理}}昨天让你不高兴的\textit{\textcolor{dark-red}{那个医生}}？} \\
+
+%         \cmidrule[0.5pt](rl){1-3}
+%         \#6 & \checkmark & \makecell[l]{C: 你觉得现在中国的做法算过度防疫吗？ \\ R: \textit{\textcolor{dark-red}{怎么不算呢？}}} \\
+%         \bottomrule
+%         \end{tabular}
+%         }
+% \end{table*}
+
+% \begin{table}[ht]
+%     \centering
+%     \caption{域泛化和少样本学习的数据集配置。}
+%     \resizebox{0.7\textwidth}{!}{
+%     \begin{tabular}{llll}
+%         \toprule
+%         & \textbf{任务} & \textbf{训练} & \textbf{开发\&测试} \\
+%         \midrule
+%         \textbf{\multirow{2}{*}{\makecell{域泛化}}} & CSRL & DuConv (train) & WeiboCSRL (dev,test) \\
+%         \cmidrule(lr){2-4}
+%         & DR & REWRITE (train) & RESTORATION (dev,test) \\
+%         \midrule
+%         \textbf{\multirow{2}{*}{\textbf{少样本学习}}} & CSRL & DuConv (100个样本) & DuConv (dev,test) \\
+%         \cmidrule(lr){2-4}
+%         & DR & REWRITE (100个样本) & REWRITE (dev,test) \\
+%         \bottomrule
+%     \end{tabular}
+%     }
+% \end{table}

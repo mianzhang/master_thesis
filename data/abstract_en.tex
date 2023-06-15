@@ -1,0 +1,31 @@
+\begin{eabstract}
+	How to understand speakers' emotion, the semantics of utterances, and the unsafe behavior of users in the conversion are crucial abilities for human-friendly chatbots. This thesis focuses on the three parts and improves task-specific models by designing new model architectures, new learning frameworks, or constructing new datasets. 
+	
+	Specifically, the main research content of this thesis includes three parts:
+	
+	\begin{enumerate}
+		
+		\item Emotion recognition in conversation from variable-length context. Existing approaches to Emotion Recognition in Conversation (ERC) use a fixed context window to recognize speakers' emotion, which may lead to either scantiness of key context or interference of redundant context. In response, we explore the benefits of variable-length context and propose a more effective approach to ERC. In our approach, we leverage different context windows when predicting the emotion of different utterances. New modules are included to realize variable-length context: 1) two speaker-aware units, which explicitly model inner- and inter-speaker dependencies to form distilled conversational context, and 2) a top-k normalization layer, which determines the most proper context windows from the conversational context to predict emotion. Experiments and ablation studies show that our approach outperforms several strong baselines on three public datasets. 
+		      
+		\item Understanding conversational semantics with Friend-training. Current self-training methods such as standard self-training, co-training, tri-training, and others often focus on improving model performance on a single task, utilizing differences in input features, model architectures, and training processes. However, many tasks in natural language processing are about different but related aspects of language, and models trained for one task can be great teachers for other related tasks. In this work, we propose friend-training, a cross-task self-training framework, where models trained to do different tasks are used in an iterative training, pseudo-labeling, and retraining process to help each other for better selection of pseudo-labels. With two dialogue understanding tasks, conversational semantic role labeling and dialogue rewriting, chosen for a case study, we show that the models trained with the friend-training framework achieve the best performance compared to strong baselines.
+		      
+		\item Understanding unsafe behavior in conversation with \data{}. One of the main challenges open-domain end-to-end dialogue systems, or chatbots, face is the prevalence of unsafe behavior, such as toxic languages and harmful suggestions. However, existing dialogue datasets do not provide enough annotation to explain and correct such unsafe behavior. We construct a new dataset called \data{} for the research of conversational safety: (1) Besides the utterance-level safety labels, \data{} also provides unsafe spans in an utterance, information able to indicate which words contribute to the detected unsafe behavior; (2) \data{} provides safe alternative responses to continue the conversation when unsafe behavior detected, guiding the conversation to a gentle trajectory.
+
+	\end{enumerate}
+ 
+        To summarize, we first propose a new method to recognize speakers' emotion from a variable length of context, then inject cross-task supervision into self-training to select high-quality pseudo-labels to train better models for conversational semantic role labeling and dialogue rewriting, and at last, construct a large-scale dataset with comprehensive annotations to help understand and correct conversational unsafe behavior.
+        
+	\vskip 21bp
+	{\bf\zihao{-4} Keywords: }
+	Emotion Recognition in Conversation,
+        Conversational Semantics,
+        Dialogue Safety,
+        Chatbots
+\end{eabstract}
+
+\begin{flushright}
+	Written by Mian Zhang
+ % Mian Zhang
+	
+	Supervised by Xiabing Zhou, Wenliang Chen
+\end{flushright}

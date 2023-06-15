@@ -1,0 +1,617 @@
+%--------------------- introduction ---------------------
+% background
+@article{challen2019artificial,
+  title={Artificial intelligence, bias and clinical safety},
+  author={Challen, Robert and Denny, Joshua and Pitt, Martin and Gompels, Luke and Edwards, Tom and Tsaneva-Atanasova, Krasimira},
+  journal={BMJ Quality \& Safety},
+  volume={28},
+  number={3},
+  pages={231--237},
+  year={2019},
+  publisher={BMJ Publishing Group Ltd}
+}
+
+@inproceedings{fortuna2020toxic,
+  title={Toxic, hateful, offensive or abusive? what are we really classifying? an empirical analysis of hate speech datasets},
+  author={Fortuna, Paula and Soler, Juan and Wanner, Leo},
+  booktitle={Proceedings of the 12th language resources and evaluation conference},
+  pages={6786--6794},
+  year={2020}
+}
+
+@article{wolf2017we,
+  title={Why we should have seen that coming: comments on microsoft’s tay “experiment,” and wider implications},
+  author={Wolf, Marty J and Miller, Keith W and Grodzinsky, Frances S},
+  journal={The ORBIT Journal},
+  volume={1},
+  number={2},
+  pages={1--12},
+  year={2017},
+  publisher={Elsevier}
+}
+
+@inproceedings{dinan2022safetykit,
+  title={Safetykit: First aid for measuring safety in open-domain conversational systems},
+  author={Dinan, Emily and Abercrombie, Gavin and Bergman, A and Spruit, Shannon L and Hovy, Dirk and Boureau, Y-Lan and Rieser, Verena},
+  booktitle={Proceedings of the 60th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)},
+  pages={4113--4133},
+  year={2022}
+}
+
+@inproceedings{nozza2021honest,
+  title={HONEST: Measuring hurtful sentence completion in language models},
+  author={Nozza, Debora and Bianchi, Federico and Hovy, Dirk},
+  booktitle={The 2021 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies},
+  year={2021},
+  organization={Association for Computational Linguistics}
+}
+
+% current works on unsafe detection
+@inproceedings{schmidt2017survey,
+  title={A survey on hate speech detection using natural language processing},
+  author={Schmidt, Anna and Wiegand, Michael},
+  booktitle={Proceedings of the fifth international workshop on natural language processing for social media},
+  pages={1--10},
+  year={2017}
+}
+
+@article{jahan2021systematic,
+  title={A systematic review of hate speech automatic detection using natural language processing},
+  author={Jahan, Md Saroar and Oussalah, Mourad},
+  journal={arXiv preprint arXiv:2106.00742},
+  year={2021}
+}
+
+@article{adiwardana2020towards,
+  title={Towards a human-like open-domain chatbot},
+  author={Adiwardana, Daniel and Luong, Minh-Thang and So, David R and Hall, Jamie and Fiedel, Noah and Thoppilan, Romal and Yang, Zi and Kulshreshtha, Apoorv and Nemade, Gaurav and Lu, Yifeng and others},
+  journal={arXiv preprint arXiv:2001.09977},
+  year={2020}
+}
+
+@article{roller2020recipes,
+  title={Recipes for building an open-domain chatbot},
+  author={Roller, Stephen and Dinan, Emily and Goyal, Naman and Ju, Da and Williamson, Mary and Liu, Yinhan and Xu, Jing and Ott, Myle and Shuster, Kurt and Smith, Eric M and others},
+  journal={arXiv preprint arXiv:2004.13637},
+  year={2020}
+}
+
+%
+@article{shah2019predictive,
+  title={Predictive biases in natural language processing models: A conceptual framework and overview},
+  author={Shah, Deven and Schwartz, H Andrew and Hovy, Dirk},
+  journal={arXiv preprint arXiv:1912.11078},
+  year={2019}
+}
+@inproceedings{lee2019exploring,
+  title={Exploring Social Bias in Chatbots using Stereotype Knowledge.},
+  author={Lee, Nayeon and Madotto, Andrea and Fung, Pascale},
+  booktitle={WNLP@ ACL},
+  pages={177--180},
+  year={2019}
+}
+@inproceedings{bender2021dangers,
+  title={On the Dangers of Stochastic Parrots: Can Language Models Be Too Big?},
+  author={Bender, Emily M and Gebru, Timnit and McMillan-Major, Angelina and Shmitchell, Shmargaret},
+  booktitle={Proceedings of the 2021 ACM Conference on Fairness, Accountability, and Transparency},
+  pages={610--623},
+  year={2021}
+}
+
+%
+@article{dinan2019build,
+  title={Build it break it fix it for dialogue safety: Robustness from adversarial human attack},
+  author={Dinan, Emily and Humeau, Samuel and Chintagunta, Bharath and Weston, Jason},
+  journal={arXiv preprint arXiv:1908.06083},
+  year={2019}
+}
+@article{baheti2021just,
+  title={Just say no: Analyzing the stance of neural dialogue generation in offensive contexts},
+  author={Baheti, Ashutosh and Sap, Maarten and Ritter, Alan and Riedl, Mark},
+  journal={arXiv preprint arXiv:2108.11830},
+  year={2021}
+}
+@article{sun2021safety,
+  title={On the safety of conversational models: Taxonomy, dataset, and benchmark},
+  author={Sun, Hao and Xu, Guangxuan and Deng, Jiawen and Cheng, Jiale and Zheng, Chujie and Zhou, Hao and Peng, Nanyun and Zhu, Xiaoyan and Huang, Minlie},
+  journal={arXiv preprint arXiv:2110.08466},
+  year={2021}
+}
+
+@article{ngo2021mitigating,
+  title={Mitigating harm in language models with conditional-likelihood filtration},
+  author={Ngo, Helen and Raterink, Cooper and Ara{\'u}jo, Jo{\~a}o GM and Zhang, Ivan and Chen, Carol and Morisot, Adrien and Frosst, Nicholas},
+  journal={arXiv preprint arXiv:2108.07790},
+  year={2021}
+}
+
+@inproceedings{curry2018metoo,
+  title={\# metoo alexa: How conversational systems respond to sexual harassment},
+  author={Curry, Amanda Cercas and Rieser, Verena},
+  booktitle={Proceedings of the second acl workshop on ethics in natural language processing},
+  pages={7--14},
+  year={2018}
+}
+
+
+
+%--------------------- related work ---------------------
+% Conversational unsafety
+@article{radford2019language,
+  title={Language models are unsupervised multitask learners},
+  author={Radford, Alec and Wu, Jeffrey and Child, Rewon and Luan, David and Amodei, Dario and Sutskever, Ilya and others},
+  journal={OpenAI blog},
+  volume={1},
+  number={8},
+  pages={9},
+  year={2019}
+}
+
+@article{gehman2020realtoxicityprompts,
+  title={Realtoxicityprompts: Evaluating neural toxic degeneration in language models},
+  author={Gehman, Samuel and Gururangan, Suchin and Sap, Maarten and Choi, Yejin and Smith, Noah A},
+  journal={arXiv preprint arXiv:2009.11462},
+  year={2020}
+}
+
+@article{palanica2019physicians,
+  title={Physicians’ perceptions of chatbots in health care: cross-sectional web-based survey},
+  author={Palanica, Adam and Flaschner, Peter and Thommandram, Anirudh and Li, Michael and Fossat, Yan and others},
+  journal={Journal of medical Internet research},
+  volume={21},
+  number={4},
+  pages={e12887},
+  year={2019},
+  publisher={JMIR Publications Inc., Toronto, Canada}
+}
+
+
+% Datasets
+@article{qian2019benchmark,
+  title={A benchmark dataset for learning to intervene in online hate speech},
+  author={Qian, Jing and Bethke, Anna and Liu, Yinyin and Belding, Elizabeth and Wang, William Yang},
+  journal={arXiv preprint arXiv:1909.04251},
+  year={2019}
+}
+
+@inproceedings{tang2020categorizing,
+  title={Categorizing Offensive Language in Social Networks: A Chinese Corpus, Systems and an Explainable Tool},
+  author={Tang, Xiangru and Shen, Xianjun},
+  booktitle={Proceedings of the 19th Chinese National Conference on Computational Linguistics},
+  pages={1045--1056},
+  year={2020}
+}
+
+@inproceedings{yang2020tocp,
+  title={Tocp: A dataset for chinese profanity processing},
+  author={Yang, Hsu and Lin, Chuan-Jie},
+  booktitle={Proceedings of the Second Workshop on Trolling, Aggression and Cyberbullying},
+  pages={6--12},
+  year={2020}
+}
+
+@article{sheng2020nice,
+  title={" Nice Try, Kiddo": Investigating Ad Hominems in Dialogue Responses},
+  author={Sheng, Emily and Chang, Kai-Wei and Natarajan, Premkumar and Peng, Nanyun},
+  journal={arXiv preprint arXiv:2010.12820},
+  year={2020}
+}
+
+@article{xu2020recipes,
+  title={Recipes for safety in open-domain chatbots},
+  author={Xu, Jing and Ju, Da and Li, Margaret and Boureau, Y-Lan and Weston, Jason and Dinan, Emily},
+  journal={arXiv preprint arXiv:2010.07079},
+  year={2020}
+}
+
+@article{ung2021saferdialogues,
+  title={Saferdialogues: Taking feedback gracefully after conversational safety failures},
+  author={Ung, Megan and Xu, Jing and Boureau, Y-Lan},
+  journal={arXiv preprint arXiv:2110.07518},
+  year={2021}
+}
+
+
+@article{deng2022cold,
+  title={Cold: A benchmark for chinese offensive language detection},
+  author={Deng, Jiawen and Zhou, Jingyan and Sun, Hao and Mi, Fei and Huang, Minlie},
+  journal={arXiv preprint arXiv:2201.06025},
+  year={2022}
+}
+
+% toxicity detection
+@inproceedings{wulczyn2017ex,
+  title={Ex machina: Personal attacks seen at scale},
+  author={Wulczyn, Ellery and Thain, Nithum and Dixon, Lucas},
+  booktitle={Proceedings of the 26th international conference on world wide web},
+  pages={1391--1399},
+  year={2017}
+}
+
+@inproceedings{davidson2017automated,
+  title={Automated hate speech detection and the problem of offensive language},
+  author={Davidson, Thomas and Warmsley, Dana and Macy, Michael and Weber, Ingmar},
+  booktitle={Proceedings of the international AAAI conference on web and social media},
+  volume={11},
+  number={1},
+  pages={512--515},
+  year={2017}
+}
+
+@article{hartvigsen2022toxigen,
+  title={Toxigen: A large-scale machine-generated dataset for adversarial and implicit hate speech detection},
+  author={Hartvigsen, Thomas and Gabriel, Saadia and Palangi, Hamid and Sap, Maarten and Ray, Dipankar and Kamar, Ece},
+  journal={arXiv preprint arXiv:2203.09509},
+  year={2022}
+}
+
+@article{hochreiter1997long,
+  title={Long short-term memory},
+  author={Hochreiter, Sepp and Schmidhuber, J{\"u}rgen},
+  journal={Neural computation},
+  volume={9},
+  number={8},
+  pages={1735--1780},
+  year={1997},
+  publisher={MIT Press}
+}
+
+@article{yang2018design,
+  title={Design challenges and misconceptions in neural sequence labeling},
+  author={Yang, Jie and Liang, Shuailong and Zhang, Yue},
+  journal={arXiv preprint arXiv:1806.04470},
+  year={2018}
+}
+
+% Methods
+@article{jin2022deep,
+  title={Deep learning for text style transfer: A survey},
+  author={Jin, Di and Jin, Zhijing and Hu, Zhiting and Vechtomova, Olga and Mihalcea, Rada},
+  journal={Computational Linguistics},
+  volume={48},
+  number={1},
+  pages={155--205},
+  year={2022},
+  publisher={MIT Press One Broadway, 12th Floor, Cambridge, Massachusetts 02142, USA~…}
+}
+
+% text style transfer + detoxicfication
+@article{santos2018fighting,
+  title={Fighting offensive language on social media with unsupervised text style transfer},
+  author={Santos, Cicero Nogueira dos and Melnyk, Igor and Padhi, Inkit},
+  journal={arXiv preprint arXiv:1805.07685},
+  year={2018}
+}
+
+@article{tran2020towards,
+  title={Towards a friendly online community: An unsupervised style transfer framework for profanity redaction},
+  author={Tran, Minh and Zhang, Yipeng and Soleymani, Mohammad},
+  journal={arXiv preprint arXiv:2011.00403},
+  year={2020}
+}
+
+@article{dale2021text,
+  title={Text detoxification using large pre-trained neural models},
+  author={Dale, David and Voronov, Anton and Dementieva, Daryna and Logacheva, Varvara and Kozlova, Olga and Semenov, Nikita and Panchenko, Alexander},
+  journal={arXiv preprint arXiv:2109.08914},
+  year={2021}
+}
+
+@article{laugier2021civil,
+  title={Civil rephrases of toxic texts with self-supervised transformers},
+  author={Laugier, L{\'e}o and Pavlopoulos, John and Sorensen, Jeffrey and Dixon, Lucas},
+  journal={arXiv preprint arXiv:2102.05456},
+  year={2021}
+}
+
+% constrained decoding + detoxicficatoin
+@article{krause2020gedi,
+  title={Gedi: Generative discriminator guided sequence generation},
+  author={Krause, Ben and Gotmare, Akhilesh Deepak and McCann, Bryan and Keskar, Nitish Shirish and Joty, Shafiq and Socher, Richard and Rajani, Nazneen Fatema},
+  journal={arXiv preprint arXiv:2009.06367},
+  year={2020}
+}
+
+@article{dathathri2019plug,
+  title={Plug and play language models: A simple approach to controlled text generation},
+  author={Dathathri, Sumanth and Madotto, Andrea and Lan, Janice and Hung, Jane and Frank, Eric and Molino, Piero and Yosinski, Jason and Liu, Rosanne},
+  journal={arXiv preprint arXiv:1912.02164},
+  year={2019}
+}
+
+% latent space + detoxification
+@article{wang2021simple,
+  title={Simple Text Detoxification by Identifying a Linear Toxic Subspace in Language Model Embeddings},
+  author={Wang, Andrew and Sudhakar, Mohit and Ji, Yangfeng},
+  journal={arXiv preprint arXiv:2112.08346},
+  year={2021}
+}
+
+@inproceedings{xenos2021context,
+  title={Context sensitivity estimation in toxicity detection},
+  author={Xenos, Alexandros and Pavlopoulos, John and Androutsopoulos, Ion},
+  booktitle={Proceedings of the 5th Workshop on Online Abuse and Harms (WOAH 2021)},
+  pages={140--145},
+  year={2021}
+}
+
+@inproceedings{logacheva2022paradetox,
+  title={ParaDetox: Detoxification with Parallel Data},
+  author={Logacheva, Varvara and Dementieva, Daryna and Ustyantsev, Sergey and Moskovskiy, Daniil and Dale, David and Krotova, Irina and Semenov, Nikita and Panchenko, Alexander},
+  booktitle={Proceedings of the 60th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)},
+  pages={6804--6818},
+  year={2022}
+}
+
+%--------------------- data collection ---------------------
+@inproceedings{qian2021pchatbot,
+  title={Pchatbot: A Large-Scale Dataset for Personalized Chatbot},
+  author={Qian, Hongjin and Li, Xiaohe and Zhong, Hanxun and Guo, Yu and Ma, Yueyuan and Zhu, Yutao and Liu, Zhanliang and Dou, Zhicheng and Wen, Ji-Rong},
+  booktitle={Proceedings of the 44th International ACM SIGIR Conference on Research and Development in Information Retrieval},
+  pages={2470--2477},
+  year={2021}
+}
+
+@article{see2019makes,
+  title={What makes a good conversation? how controllable attributes affect human judgments},
+  author={See, Abigail and Roller, Stephen and Kiela, Douwe and Weston, Jason},
+  journal={arXiv preprint arXiv:1902.08654},
+  year={2019}
+}
+
+
+
+
+%--------------------- experiment ---------------------
+% sequence tagging
+@article{he2020survey,
+  title={A survey on recent advances in sequence labeling from deep learning models},
+  author={He, Zhiyong and Wang, Zanbo and Wei, Wei and Feng, Shanshan and Mao, Xianling and Jiang, Sheng},
+  journal={arXiv preprint arXiv:2011.06727},
+  year={2020}
+}
+
+@inproceedings{wolf2020transformers,
+  title={Transformers: State-of-the-art natural language processing},
+  author={Wolf, Thomas and Debut, Lysandre and Sanh, Victor and Chaumond, Julien and Delangue, Clement and Moi, Anthony and Cistac, Pierric and Rault, Tim and Louf, R{\'e}mi and Funtowicz, Morgan and others},
+  booktitle={Proceedings of the 2020 conference on empirical methods in natural language processing: system demonstrations},
+  pages={38--45},
+  year={2020}
+}
+
+@article{lafferty2001conditional,
+  title={Conditional random fields: Probabilistic models for segmenting and labeling sequence data},
+  author={Lafferty, John and McCallum, Andrew and Pereira, Fernando CN},
+  year={2001}
+}
+
+
+% Unlikelihood training
+@article{welleck2019neural,
+  title={Neural text generation with unlikelihood training},
+  author={Welleck, Sean and Kulikov, Ilia and Roller, Stephen and Dinan, Emily and Cho, Kyunghyun and Weston, Jason},
+  journal={arXiv preprint arXiv:1908.04319},
+  year={2019}
+}
+
+@article{li2019don,
+  title={Don't Say That! Making Inconsistent Dialogue Unlikely with Unlikelihood Training},
+  author={Li, Margaret and Roller, Stephen and Kulikov, Ilia and Welleck, Sean and Boureau, Y-Lan and Cho, Kyunghyun and Weston, Jason},
+  journal={arXiv preprint arXiv:1911.03860},
+  year={2019}
+}
+
+
+@article{lewis2019bart,
+  title={Bart: Denoising sequence-to-sequence pre-training for natural language generation, translation, and comprehension},
+  author={Lewis, Mike and Liu, Yinhan and Goyal, Naman and Ghazvininejad, Marjan and Mohamed, Abdelrahman and Levy, Omer and Stoyanov, Ves and Zettlemoyer, Luke},
+  journal={arXiv preprint arXiv:1910.13461},
+  year={2019}
+}
+
+@article{gu2022eva2,
+  title={Eva2. 0: Investigating open-domain chinese dialogue systems with large-scale pre-training},
+  author={Gu, Yuxian and Wen, Jiaxin and Sun, Hao and Song, Yi and Ke, Pei and Zheng, Chujie and Zhang, Zheng and Yao, Jianzhu and Zhu, Xiaoyan and Tang, Jie and others},
+  journal={arXiv preprint arXiv:2203.09313},
+  year={2022}
+}
+
+@article{zhou2021eva,
+  title={Eva: An open-domain chinese dialogue system with large-scale generative pre-training},
+  author={Zhou, Hao and Ke, Pei and Zhang, Zheng and Gu, Yuxian and Zheng, Yinhe and Zheng, Chujie and Wang, Yida and Wu, Chen Henry and Sun, Hao and Yang, Xiaocong and others},
+  journal={arXiv preprint arXiv:2108.01547},
+  year={2021}
+}
+
+
+@article{holtzman2019curious,
+  title={The curious case of neural text degeneration},
+  author={Holtzman, Ari and Buys, Jan and Du, Li and Forbes, Maxwell and Choi, Yejin},
+  journal={arXiv preprint arXiv:1904.09751},
+  year={2019}
+}
+
+@article{ouyang2022training,
+  title={Training language models to follow instructions with human feedback},
+  author={Ouyang, Long and Wu, Jeff and Jiang, Xu and Almeida, Diogo and Wainwright, Carroll L and Mishkin, Pamela and Zhang, Chong and Agarwal, Sandhini and Slama, Katarina and Ray, Alex and others},
+  journal={arXiv preprint arXiv:2203.02155},
+  year={2022}
+}
+
+@article{schulman2017proximal,
+  title={Proximal policy optimization algorithms},
+  author={Schulman, John and Wolski, Filip and Dhariwal, Prafulla and Radford, Alec and Klimov, Oleg},
+  journal={arXiv preprint arXiv:1707.06347},
+  year={2017}
+}
+
+
+@article{glaese2022improving,
+  title={Improving alignment of dialogue agents via targeted human judgements},
+  author={Glaese, Amelia and McAleese, Nat and Tr{\k{e}}bacz, Maja and Aslanides, John and Firoiu, Vlad and Ewalds, Timo and Rauh, Maribeth and Weidinger, Laura and Chadwick, Martin and Thacker, Phoebe and others},
+  journal={arXiv preprint arXiv:2209.14375},
+  year={2022}
+}
+
+
+@article{adiwardana2020meena,
+  title={Towards a human-like open-domain chatbot},
+  author={Adiwardana, Daniel and Luong, Minh-Thang and So, David R and Hall, Jamie and Fiedel, Noah and Thoppilan, Romal and Yang, Zi and Kulshreshtha, Apoorv and Nemade, Gaurav and Lu, Yifeng and others},
+  journal={arXiv preprint arXiv:2001.09977},
+  year={2020}
+}
+
+@article{young2013pomdp,
+  title={Pomdp-based statistical spoken dialog systems: A review},
+  author={Young, Steve and Ga{\v{s}}i{\'c}, Milica and Thomson, Blaise and Williams, Jason D},
+  journal={Proceedings of the IEEE},
+  volume={101},
+  number={5},
+  pages={1160--1179},
+  year={2013},
+  publisher={IEEE}
+}
+
+@article{gao2019neural,
+  title={Neural approaches to conversational AI},
+  author={Gao, Jianfeng and Galley, Michel and Li, Lihong and others},
+  journal={Foundations and Trends{\textregistered} in Information Retrieval},
+  volume={13},
+  number={2-3},
+  pages={127--298},
+  year={2019},
+  publisher={Now Publishers, Inc.}
+}
+
+
+@misc{jurafsky2019speech,
+  title={Speech and language processing: An introduction to natural language processing, computational linguistics, and speech recognition},
+  author={Jurafsky, Dan and Martin, James H},
+  howpublished={Draft of October 16th, 2019, Chapter 26. Website: https://web.stanford.edu/~jurafsky/slp3.},
+  year={2019},
+  publisher={Prentice Hall}
+}
+
+@article{hinton2012deep,
+  title={Deep neural networks for acoustic modeling in speech recognition},
+  author={Hinton, Geoffrey and Deng, Li and Yu, Dong and Dahl, George and Mohamed, Abdel-rahman and Jaitly, Navdeep and Senior, Andrew and Vanhoucke, Vincent and Nguyen, Patrick and Kingsbury, Brian and others},
+  journal={IEEE Signal processing magazine},
+  volume={29},
+  year={2012}
+}
+
+@article{collobert2016wav2letter,
+  title={Wav2letter: an end-to-end convnet-based speech recognition system},
+  author={Collobert, Ronan and Puhrsch, Christian and Synnaeve, Gabriel},
+  journal={arXiv preprint arXiv:1609.03193},
+  year={2016}
+}
+
+@inproceedings{krizhevsky2012imagenet,
+  title={Imagenet classification with deep convolutional neural networks},
+  author={Krizhevsky, Alex and Sutskever, Ilya and Hinton, Geoffrey E},
+  booktitle={Advances in neural information processing systems},
+  pages={1097--1105},
+  year={2012}
+}
+
+@inproceedings{sutskever2014sequence,
+  title={Sequence to sequence learning with neural networks},
+  author={Sutskever, Ilya and Vinyals, Oriol and Le, Quoc V},
+  booktitle={Advances in Neural Information Processing Systems},
+  pages={3104--3112},
+  year={2014}
+}
+
+@inproceedings{gehring2017convolutional,
+  title={Convolutional sequence to sequence learning},
+  author={Gehring, Jonas and Auli, Michael and Grangier, David and Yarats, Denis and Dauphin, Yann N},
+  booktitle={Proceedings of the 34th International Conference on Machine Learning-Volume 70},
+  pages={1243--1252},
+  year={2017},
+  organization={JMLR. org}
+}
+
+@article{zhang2019dialogpt,
+  title={Dialo{GPT}: Large-Scale Generative Pre-training for Conversational Response Generation},
+  author={Zhang, Yizhe and Sun, Siqi and Galley, Michel and Chen, Yen-Chun and Brockett, Chris and Gao, Xiang and Gao, Jianfeng and Liu, Jingjing and Dolan, Bill},
+  journal={arXiv preprint arXiv:1911.00536},
+  year={2019}
+}
+
+@misc{wang2020cdialgpt,
+      title={A Large-Scale Chinese Short-Text Conversation Dataset}, 
+      author={Yida Wang and Pei Ke and Yinhe Zheng and Kaili Huang and Yong Jiang and Xiaoyan Zhu and Minlie Huang},
+      year={2020},
+      eprint={2008.03946},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL}
+}
+
+@misc{roller2020blenderbot,
+      title={Recipes for building an open-domain chatbot}, 
+      author={Stephen Roller and Emily Dinan and Naman Goyal and Da Ju and Mary Williamson and Yinhan Liu and Jing Xu and Myle Ott and Kurt Shuster and Eric M. Smith and Y-Lan Boureau and Jason Weston},
+      year={2020},
+      eprint={2004.13637},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL}
+}
+
+@article{micro2016exam,
+  title={Why we should have seen that coming: comments on microsoft’s tay “experiment,” and wider implications},
+  author={Wolf, Marty J and Miller, Keith W and Grodzinsky, Frances S},
+  journal={The ORBIT Journal},
+  volume={1},
+  number={2},
+  pages={1--12},
+  year={2017},
+  publisher={Elsevier}
+}
+
+@misc{zhang2020dialogpt,
+      title={DialoGPT: Large-Scale Generative Pre-training for Conversational Response Generation}, 
+      author={Yizhe Zhang and Siqi Sun and Michel Galley and Yen-Chun Chen and Chris Brockett and Xiang Gao and Jianfeng Gao and Jingjing Liu and Bill Dolan},
+      year={2020},
+      eprint={1911.00536},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL}
+}
+
+@article{chen2023robust,
+  title={How Robust is GPT-3.5 to Predecessors? A Comprehensive Study on Language Understanding Tasks},
+  author={Chen, Xuanting and Ye, Junjie and Zu, Can and Xu, Nuo and Zheng, Rui and Peng, Minlong and Zhou, Jie and Gui, Tao and Zhang, Qi and Huang, Xuanjing},
+  journal={arXiv preprint arXiv:2303.00293},
+  year={2023}
+}
+
+@article{bang2023multitask,
+  title={A multitask, multilingual, multimodal evaluation of chatgpt on reasoning, hallucination, and interactivity},
+  author={Bang, Yejin and Cahyawijaya, Samuel and Lee, Nayeon and Dai, Wenliang and Su, Dan and Wilie, Bryan and Lovenia, Holy and Ji, Ziwei and Yu, Tiezheng and Chung, Willy and others},
+  journal={arXiv preprint arXiv:2302.04023},
+  year={2023}
+}
+
+@article{wei2023zero,
+  title={Zero-Shot Information Extraction via Chatting with ChatGPT},
+  author={Wei, Xiang and Cui, Xingyu and Cheng, Ning and Wang, Xiaobin and Zhang, Xin and Huang, Shen and Xie, Pengjun and Xu, Jinan and Chen, Yufeng and Zhang, Meishan and others},
+  journal={arXiv preprint arXiv:2302.10205},
+  year={2023}
+}
+
+@article{wuchatgpt,
+  title={ChatGPT or Grammarly? Evaluating ChatGPT on Grammatical Error Correction Benchmark},
+  author={Wu, Haoran and Wang, Wenxuan and Wan, Yuxuan and Jiao, Wenxiang and Lyu, Michael R}
+}
+
+@article{cn1,
+  title  = {聊天机器人的技术及展望},
+  author = {武威、周明},
+  year   = {2017},
+}
+
+
+@article{cn2,
+  title  = {人机对话浪潮：语音助手、聊天机器人、机器伴侣},
+  author = {刘挺},
+  year   = {2015},
+}

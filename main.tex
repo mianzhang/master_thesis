@@ -1,0 +1,132 @@
+%!TEX program=xelatex
+%!TEX program=bibtex
+%!TEX program=xelatex
+%!TEX program=xelatex
+% !Mode:: "TeX:UTF-8"
+\documentclass[master,openany,twoside,a4paper,AutoFakeBold]{sudathesis}
+% \usepackage{graphicx}
+% \usepackage{tikz}
+% \usepackage{pgfplots}
+% \usepackage{color}
+% \usepackage{dashrule}
+% \usepackage{makecell}
+%\usepackage{colortbl}
+%\usepackage{arydshln}
+% \usepackage{multirow}
+% \usepackage{multicol}
+%\usepackage[SlantFont,BoldFont,CJKchecksingle,CJKnumber]{xeCJK}
+%\setmainfont[BoldFont=SimHei ,ItalicFont=KaiTi_GB2312]{SimKai}
+%\newcommand\fontnamekai{KaiTi_GB2312}
+
+\usepackage{graphics}
+\usepackage{pdfpages}
+
+% \usepackage[hang,flushmargin]{footmisc}
+
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{bbding}
+\usepackage{subcaption, booktabs} % for subfigure
+\usepackage{color, colortbl}
+\usepackage{soul}
+\usepackage{enumitem}% http://ctan.org/pkg/enumitem
+\usepackage{makecell}
+\usepackage{multirow}
+\usepackage{multicol}
+\usepackage[algo2e]{algorithm2e}
+% change the size of footnote
+\renewcommand{\footnotesize}{\fontsize{9pt}{11pt}\selectfont}
+% change the color of footnote
+\usepackage{footmisc}
+\usepackage{xcolor}
+\definecolor{dark-green}{RGB}{84, 130, 53}
+\definecolor{dark-red}{RGB}{192, 0, 0}
+\definecolor{LimeGreen}{RGB}{50, 205, 50}
+
+
+\DeclareMathOperator*{\argmax}{argmax} % thin space, limits underneath in displays
+\DeclareMathOperator*{\softmax}{softmax}
+\DeclareMathOperator*{\LayerNorm}{LayerNorm}
+\DeclareMathOperator*{\ReLU}{ReLU}
+\DeclareMathOperator*{\concat}{concat}
+\newcommand{\data}{\textsc{SafeConv}}
+\interfootnotelinepenalty=10000
+
+\setlength{\belowcaptionskip}{-0.3cm} 
+
+\begin{document}
+
+% 用户信息
+\include{data/com_info}
+
+% 中英封面、提名页、授权书
+\maketitle
+
+\includepdf{data/artificial.pdf}
+\includepdf{data/blank.pdf}
+% \includepdf{data/auth.pdf}
+% \includepdf{data/blank.pdf}
+
+\cleardoublepage
+
+% 正文前页码是大写罗马字母
+\pagenumbering{Roman}
+% 前言页眉页脚样式 % 摘要
+\pagestyle{cnfrontmatter}
+\include{data/abstract_cn}
+
+\pagestyle{enfrontmatter}
+\include{data/abstract_en}	
+
+% 目录不设置页眉和页码
+\makeatletter
+\let \asas \ps@plain
+\let \ps@plain \ps@empty
+\makeatother
+\pagestyle{empty}
+
+% 生成目录
+\tableofcontents
+\setcounter{secnumdepth}{4}
+
+\makeatletter
+\let \ps@plain \asas
+\let\asas\relax
+\makeatother
+\clearpage  %目录3页以上，使用cleardoublepage
+
+% 正文页码样式
+\mainmatter
+% 正文页眉页脚样式
+\pagestyle{mainmatter}
+% 正文页码是阿拉伯数字
+\pagenumbering{arabic}
+
+% % 正文
+
+
+\include{data/intro}
+\include{data/erc}
+\include{data/fdt}
+\include{data/safety}
+\include{data/future}
+
+
+
+% % 参考文献,4或者小4楷体
+\addcontentsline{toc}{chapter}{参考文献}
+\bibliography{erc,fdt,safety}
+
+% % 附录,4或者小4楷体
+% \begin{appendix}
+% \end{appendix}
+
+% 附页标题样式
+\backmatter
+% 附页
+\include{data/achievement}
+\include{data/acknowledgement}
+
+\includepdf{data/commitee_decision.pdf}
+\end{document}
